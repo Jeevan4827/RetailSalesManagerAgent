@@ -1,0 +1,22 @@
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+*.local
+
+# Secrets & Environment
+.env
+.env.*
+!.env.example
+frontend/.env.example
+
+# Testing & Logs
+.pytest_cache/
+*.log
