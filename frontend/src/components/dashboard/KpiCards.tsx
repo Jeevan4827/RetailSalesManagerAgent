@@ -34,6 +34,11 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ kpis, onAskAi }) => {
 
   const isHealthySupply = kpis.stock_to_demand_ratio >= 100;
 
+  // Mini decorative SVG sparkline paths for visual feedback
+  const sparklineUp = "M 0 25 C 20 22, 35 15, 55 18 C 75 22, 90 8, 110 5 L 110 30 L 0 30 Z";
+  const sparklineWave = "M 0 20 C 15 10, 30 25, 50 15 C 70 8, 85 22, 110 12 L 110 30 L 0 30 Z";
+  const sparklineSurge = "M 0 28 C 25 24, 45 20, 65 14 C 85 8, 95 6, 110 2 L 110 30 L 0 30 Z";
+
   const cards = [
     {
       id: 'revenue',
@@ -41,9 +46,13 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ kpis, onAskAi }) => {
       value: formatCurrency(kpis.total_revenue),
       subtext: `Avg item price $${kpis.avg_price.toFixed(2)}`,
       icon: DollarSign,
-      iconBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+      glowBorder: 'group-hover:border-emerald-500/40',
+      glowBg: 'from-emerald-500/10 via-teal-500/5 to-transparent',
+      accentGradient: 'from-emerald-400 to-teal-400',
       badge: 'Revenue Leader',
-      badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      badgeClass: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+      sparkline: sparklineSurge,
+      sparkColor: '#10b981',
       askPrompt: 'What drove the total gross revenue and which categories contributed the most?'
     },
     {
@@ -52,9 +61,13 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ kpis, onAskAi }) => {
       value: formatNumber(kpis.total_units_sold),
       subtext: `From ${kpis.total_records.toLocaleString()} transactions`,
       icon: Package,
-      iconBg: 'bg-blue-50 text-blue-600 border-blue-200',
+      glowBorder: 'group-hover:border-cyan-500/40',
+      glowBg: 'from-cyan-500/10 via-teal-500/5 to-transparent',
+      accentGradient: 'from-cyan-400 to-teal-400',
       badge: 'Sales Volume',
-      badgeBg: 'bg-blue-50 text-blue-700 border-blue-200',
+      badgeClass: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30',
+      sparkline: sparklineUp,
+      sparkColor: '#06b6d4',
       askPrompt: 'Analyze sales velocity and which products had the highest units sold.'
     },
     {
@@ -63,35 +76,42 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ kpis, onAskAi }) => {
       value: formatNumber(kpis.total_inventory),
       subtext: `Replenishment: ${formatNumber(kpis.total_units_ordered)} ordered`,
       icon: Boxes,
-      iconBg: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+      glowBorder: 'group-hover:border-indigo-500/40',
+      glowBg: 'from-indigo-500/10 via-purple-500/5 to-transparent',
+      accentGradient: 'from-indigo-400 to-purple-400',
       badge: 'Current Stock',
-      badgeBg: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      badgeClass: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30',
+      sparkline: sparklineWave,
+      sparkColor: '#818cf8',
       askPrompt: 'What is our current stock posture and are there any overstocked categories?'
     },
     {
       id: 'stock_ratio',
-      title: 'Stock-to-Demand Coverage',
+      title: 'Stock-to-Demand Ratio',
       value: `${kpis.stock_to_demand_ratio.toFixed(1)}%`,
-      subtext: `Forecast: ${formatNumber(kpis.total_demand_forecast)} units expected`,
+      subtext: `Forecast: ${formatNumber(kpis.total_demand_forecast)} units`,
       icon: isHealthySupply ? ShieldCheck : AlertTriangle,
-      iconBg: isHealthySupply 
-        ? 'bg-teal-50 text-teal-600 border-teal-200' 
-        : 'bg-amber-50 text-amber-600 border-amber-200',
+      glowBorder: isHealthySupply ? 'group-hover:border-teal-500/40' : 'group-hover:border-amber-500/40',
+      glowBg: isHealthySupply ? 'from-teal-500/10 to-transparent' : 'from-amber-500/10 to-transparent',
+      accentGradient: isHealthySupply ? 'from-teal-400 to-cyan-300' : 'from-amber-400 to-orange-400',
       badge: isHealthySupply ? 'Fully Stocked' : 'Supply Risk',
-      badgeBg: isHealthySupply 
-        ? 'bg-teal-50 text-teal-700 border-teal-200' 
-        : 'bg-amber-50 text-amber-700 border-amber-200',
+      badgeClass: isHealthySupply ? 'bg-teal-500/10 text-teal-300 border-teal-500/30' : 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+      isGauge: true,
       askPrompt: 'Compare our inventory levels against demand forecast to identify stockout risks.'
     },
     {
       id: 'discount',
-      title: 'Average Discount Depth',
+      title: 'Avg Discount Depth',
       value: `${kpis.avg_discount.toFixed(1)}%`,
-      subtext: 'Across all promotional & standard sales',
+      subtext: 'Across promotional & standard days',
       icon: Percent,
-      iconBg: 'bg-purple-50 text-purple-600 border-purple-200',
+      glowBorder: 'group-hover:border-purple-500/40',
+      glowBg: 'from-purple-500/10 to-transparent',
+      accentGradient: 'from-purple-400 to-pink-400',
       badge: 'Promotion',
-      badgeBg: 'bg-purple-50 text-purple-700 border-purple-200',
+      badgeClass: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+      sparkline: sparklineWave,
+      sparkColor: '#c084fc',
       askPrompt: 'Did higher discounts correlate with increased sales volume?'
     },
     {
@@ -100,72 +120,129 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ kpis, onAskAi }) => {
       value: formatNumber(kpis.total_units_ordered),
       subtext: 'Pipeline replenishment orders',
       icon: TrendingUp,
-      iconBg: 'bg-sky-50 text-sky-600 border-sky-200',
+      glowBorder: 'group-hover:border-sky-500/40',
+      glowBg: 'from-sky-500/10 to-transparent',
+      accentGradient: 'from-sky-400 to-blue-400',
       badge: 'Supply Chain',
-      badgeBg: 'bg-sky-50 text-sky-700 border-sky-200',
+      badgeClass: 'bg-sky-500/10 text-sky-300 border-sky-500/30',
+      sparkline: sparklineUp,
+      sparkColor: '#38bdf8',
       askPrompt: 'What is the order fulfillment cadence across our stores?'
     },
     {
       id: 'stores',
-      title: 'Active Retail Stores',
+      title: 'Physical Store Hubs',
       value: kpis.active_stores_count.toString(),
-      subtext: 'Across East, North, South, West regions',
+      subtext: 'East, North, South, West regions',
       icon: Store,
-      iconBg: 'bg-amber-50 text-amber-600 border-amber-200',
+      glowBorder: 'group-hover:border-amber-500/40',
+      glowBg: 'from-amber-500/10 to-transparent',
+      accentGradient: 'from-amber-400 to-yellow-400',
       badge: 'Locations',
-      badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
+      badgeClass: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+      sparkline: sparklineSurge,
+      sparkColor: '#fbbf24',
       askPrompt: 'Which retail store location generates the highest revenue?'
     },
     {
       id: 'products',
-      title: 'Active Catalog SKUs',
+      title: 'Catalog Active SKUs',
       value: kpis.active_products_count.toString(),
-      subtext: 'Distributed across 5 major categories',
+      subtext: '5 merchandise departments',
       icon: Tag,
-      iconBg: 'bg-rose-50 text-rose-600 border-rose-200',
-      badge: 'Product Catalog',
-      badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
+      glowBorder: 'group-hover:border-rose-500/40',
+      glowBg: 'from-rose-500/10 to-transparent',
+      accentGradient: 'from-rose-400 to-red-400',
+      badge: 'Catalog',
+      badgeClass: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
+      sparkline: sparklineUp,
+      sparkColor: '#fb7185',
       askPrompt: 'Show performance metrics broken down by product catalog category.'
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
       {cards.map((card) => {
         const IconComponent = card.icon;
         return (
           <div
             key={card.id}
-            className="group relative bg-white rounded-xl p-5 border border-slate-200/90 shadow-sm hover:shadow-md hover:border-teal-300 transition-all duration-200 flex flex-col justify-between"
+            className={`group relative glass-panel rounded-2xl p-5 border border-slate-800/80 hover:border-teal-500/40 shadow-glass-sm hover:shadow-glow-teal transition-all duration-300 flex flex-col justify-between overflow-hidden ${card.glowBorder}`}
           >
+            {/* Top Glowing Accent Line */}
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${card.accentGradient} opacity-70 group-hover:opacity-100 transition-opacity`} />
+
+            {/* Ambient Radial Mesh on Card */}
+            <div className={`absolute -right-8 -top-8 w-32 h-32 rounded-full bg-gradient-to-br ${card.glowBg} blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500`} />
+
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className={`p-2.5 rounded-lg border ${card.iconBg}`}>
-                  <IconComponent className="w-5 h-5" />
+              {/* Header: Icon + Badge */}
+              <div className="flex items-center justify-between mb-3.5">
+                <span className="p-2.5 rounded-xl bg-slate-800/80 text-white border border-slate-700/60 shadow-inner group-hover:scale-105 transition-transform">
+                  <IconComponent className="w-4 h-4 text-teal-300" />
                 </span>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${card.badgeBg}`}>
+                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${card.badgeClass} flex items-center gap-1.5`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                   {card.badge}
                 </span>
               </div>
-              <h3 className="text-xs font-medium text-slate-500 tracking-wide uppercase">
+
+              {/* Title */}
+              <h3 className="text-[11px] font-semibold text-slate-400 tracking-wider uppercase">
                 {card.title}
               </h3>
-              <p className="text-2xl font-bold text-slate-900 mt-1 tracking-tight">
-                {card.value}
-              </p>
+
+              {/* Figure & Visual Representation */}
+              <div className="flex items-end justify-between mt-1">
+                <div>
+                  <p className="text-3xl font-extrabold text-white tracking-tight group-hover:text-teal-200 transition-colors">
+                    {card.value}
+                  </p>
+                </div>
+
+                {/* Circular Gauge for Stock Ratio or Sparkline */}
+                {card.isGauge ? (
+                  <div className="relative w-11 h-11 shrink-0 mb-1">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="#1e293b" strokeWidth="3" />
+                      <circle
+                        cx="18" cy="18" r="14" fill="none"
+                        stroke={isHealthySupply ? "#14b8a6" : "#f59e0b"}
+                        strokeWidth="3.2"
+                        strokeDasharray="88"
+                        strokeDashoffset={Math.max(0, 88 - (Math.min(200, kpis.stock_to_demand_ratio) / 200) * 88)}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-teal-300 font-mono">
+                      ✓
+                    </span>
+                  </div>
+                ) : (
+                  <div className="w-20 h-8 opacity-40 group-hover:opacity-80 transition-opacity">
+                    <svg viewBox="0 0 110 30" className="w-full h-full overflow-visible">
+                      <path d={card.sparkline} fill={card.sparkColor} fillOpacity="0.2" />
+                      <path d={card.sparkline?.replace(/ L 110 30 L 0 30 Z/, '')} fill="none" stroke={card.sparkColor} strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-              <span className="truncate">{card.subtext}</span>
+            {/* Subtext and AI Prompt Link */}
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+              <span className="truncate max-w-[170px]">{card.subtext}</span>
               {onAskAi && (
                 <button
                   type="button"
                   onClick={() => onAskAi(card.askPrompt)}
-                  className="opacity-0 group-hover:opacity-100 flex items-center gap-1 text-teal-700 font-medium hover:underline transition-opacity ml-2 whitespace-nowrap"
-                  title="Ask AI assistant about this metric"
+                  className="flex items-center gap-1 text-teal-400 hover:text-teal-200 font-semibold transition-colors group/btn"
+                  title="Query AI Copilot for this metric"
                 >
-                  <span>Query AI</span>
-                  <ArrowUpRight className="w-3 h-3" />
+                  <span className="text-[10px] tracking-wide uppercase">Ask AI</span>
+                  <ArrowUpRight className="w-3 h-3 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                 </button>
               )}
             </div>

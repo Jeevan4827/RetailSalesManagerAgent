@@ -6,7 +6,8 @@ from app.config import settings
 from app.schemas import (
     ChatRequest, ChatResponse, HealthResponse, SchemaResponse, ColumnInfo,
     SaveSessionRequest, SessionSummary, SessionDetail,
-    DashboardAnalyticsResponse, PaginatedRecordsResponse
+    DashboardAnalyticsResponse, PaginatedRecordsResponse,
+    ScenarioSimulationRequest, ScenarioSimulationResponse
 )
 from app.database import (
     check_db_health, execute_readonly_query, get_table_schema_info,
@@ -15,7 +16,7 @@ from app.database import (
 from app.services.sql_generator import generate_sql
 from app.services.sql_validator import validate_and_sanitize_sql, SQLValidationError
 from app.services.answer_generator import generate_answer
-from app.services.analytics_service import get_dashboard_analytics, get_analytics_records
+from app.services.analytics_service import get_dashboard_analytics, get_analytics_records, run_scenario_simulation
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -288,4 +289,23 @@ def get_records(
     except Exception as e:
         logger.error(f"Failed to fetch paginated records: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching records: {str(e)}")
+
+@app.post("/analytics/simulate", response_model=ScenarioSimulationResponse, tags=["Analytics"])
+def simulate_scenario(request: ScenarioSimulationRequest):
+    """
+    Simulates price elasticity, demand shocks, weather shifts, and stockout vulnerability.
+    """
+    try:
+        return run_scenario_simulation(
+            category=request.category,
+            region=request.region,
+            price_change_pct=request.price_change_pct,
+            demand_shock_pct=request.demand_shock_pct,
+            target_weather=request.target_weather,
+            competitor_discount_pct=request.competitor_discount_pct,
+            is_holiday_mode=request.is_holiday_mode or False,
+        )
+    except Exception as e:
+        logger.error(f"Failed to run scenario simulation: {e}")
+        raise HTTPException(status_code=500, detail=f"Error running simulation: {str(e)}")
 

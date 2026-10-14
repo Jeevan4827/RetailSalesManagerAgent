@@ -447,3 +447,237 @@ def get_analytics_records(
                 "page_size": page_size,
                 "total_pages": total_pages,
             }
+
+def run_scenario_simulation(
+    category: Optional[str] = "All",
+    region: Optional[str] = "All",
+    price_change_pct: float = 0.0,
+    demand_shock_pct: float = 0.0,
+    target_weather: Optional[str] = "Baseline",
+    competitor_discount_pct: float = 0.0,
+    is_holiday_mode: bool = False,
+) -> Dict[str, Any]:
+    """
+    Simulates pricing elasticity, demand shocks, weather shifts, and stockout vulnerability
+    based on the 73,100 ground-truth records in public.retail_inventory.
+    """
+    category_elasticities = {
+        "Electronics": -1.65,
+        "Clothing": -1.45,
+        "Furniture": -1.20,
+        "Toys": -1.35,
+        "Groceries": -0.75,
+    }
+    
+    selected_elasticity = category_elasticities.get(category, -1.35) if category and category != "All" else -1.35
+
+    weather_multipliers = {
+        "Sunny": 1.06,
+        "Rainy": 0.93,
+        "Snowy": 0.87,
+        "Cloudy": 1.00,
+        "Baseline": 1.00,
+    }
+    weather_factor = weather_multipliers.get(target_weather, 1.00)
+    holiday_factor = 1.25 if is_holiday_mode else 1.00
+    competitor_factor = 1.0 - (competitor_discount_pct * 0.35 / 100.0)
+
+    # Price effect: P_new = P_base * (1 + delta_P)
+    price_multiplier = 1.0 + (price_change_pct / 100.0)
+    
+    # Elasticity volume lift: delta_Q = -elasticity * delta_P (e.g. -10% price => +13.5% units)
+    price_volume_factor = 1.0 + (-selected_elasticity * (-price_change_pct / 100.0))
+    demand_shock_factor = 1.0 + (demand_shock_pct / 100.0)
+
+    # Combined volume multiplier
+    total_volume_multiplier = max(0.10, price_volume_factor * demand_shock_factor * weather_factor * holiday_factor * competitor_factor)
+
+    where_sql, params = build_filter_clause(
+        category=category,
+        region=region,
+    )
+
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            # 1. Baseline Totals
+            cur.execute(f"""
+                SELECT 
+                    COALESCE(SUM(units_sold), 0) AS total_units,
+                    COALESCE(SUM(units_sold * price), 0) AS total_revenue,
+                    COALESCE(SUM(inventory_level), 0) AS total_inventory,
+                    COALESCE(SUM(demand_forecast), 0) AS total_demand
+                FROM public.retail_inventory
+                WHERE {where_sql};
+            """, params)
+            base_row = cur.fetchone()
+
+            base_units = int(base_row["total_units"])
+            base_revenue = float(base_row["total_revenue"])
+            base_inventory = int(base_row["total_inventory"])
+            base_demand = float(base_row["total_demand"])
+
+            # 2. Category comparison data
+            cur.execute(f"""
+                SELECT 
+                    category,
+                    COALESCE(SUM(units_sold * price), 0) AS base_rev,
+                    COALESCE(SUM(units_sold), 0) AS base_u
+                FROM public.retail_inventory
+                WHERE {where_sql}
+                GROUP BY category
+                ORDER BY base_rev DESC;
+            """, params)
+            cat_rows = cur.fetchall()
+
+            category_comparison = []
+            for r in cat_rows:
+                c_name = r["category"]
+                c_elasticity = category_elasticities.get(c_name, selected_elasticity)
+                c_vol_factor = max(0.10, (1.0 + (-c_elasticity * (-price_change_pct / 100.0))) * demand_shock_factor * weather_factor * holiday_factor * competitor_factor)
+                c_base_rev = float(r["base_rev"])
+                c_sim_rev = round(c_base_rev * price_multiplier * c_vol_factor, 2)
+                category_comparison.append({
+                    "category": c_name,
+                    "baseline_revenue": round(c_base_rev, 2),
+                    "simulated_revenue": c_sim_rev,
+                    "delta_pct": round(((c_sim_rev - c_base_rev) / max(1.0, c_base_rev)) * 100, 1),
+                })
+
+            # 3. Regional comparison data
+            cur.execute(f"""
+                SELECT 
+                    region,
+                    COALESCE(SUM(units_sold * price), 0) AS base_rev
+                FROM public.retail_inventory
+                WHERE {where_sql}
+                GROUP BY region
+                ORDER BY base_rev DESC;
+            """, params)
+            reg_rows = cur.fetchall()
+            regional_comparison = [
+                {
+                    "region": r["region"],
+                    "baseline_revenue": round(float(r["base_rev"]), 2),
+                    "simulated_revenue": round(float(r["base_rev"]) * price_multiplier * total_volume_multiplier, 2),
+                }
+                for r in reg_rows
+            ]
+
+            # 4. Identify high-risk stockout SKUs under this simulated demand
+            cur.execute(f"""
+                SELECT 
+                    product_id,
+                    category,
+                    region,
+                    ROUND(AVG(inventory_level), 0) AS avg_inventory,
+                    ROUND(AVG(demand_forecast), 1) AS avg_demand,
+                    ROUND(AVG(price), 2) AS avg_price
+                FROM public.retail_inventory
+                WHERE {where_sql}
+                GROUP BY product_id, category, region
+                ORDER BY avg_demand DESC
+                LIMIT 30;
+            """, params)
+            sku_candidates = cur.fetchall()
+
+            at_risk_skus = []
+            total_shortfall_loss = 0.0
+            stockout_count = 0
+
+            for s in sku_candidates:
+                curr_inv = int(s["avg_inventory"])
+                b_demand = float(s["avg_demand"])
+                p_avg = float(s["avg_price"]) * price_multiplier
+                sim_demand = round(b_demand * total_volume_multiplier, 1)
+
+                if sim_demand > curr_inv:
+                    stockout_count += 1
+                    shortfall = int(sim_demand - curr_inv)
+                    loss = round(shortfall * p_avg, 2)
+                    total_shortfall_loss += loss
+                    reorder_rec = int(shortfall * 1.25) + 10 # 25% safety stock + base
+
+                    at_risk_skus.append({
+                        "product_id": s["product_id"],
+                        "category": s["category"],
+                        "region": s["region"],
+                        "current_inventory": curr_inv,
+                        "base_demand": b_demand,
+                        "simulated_demand": sim_demand,
+                        "shortfall_units": shortfall,
+                        "estimated_revenue_loss": loss,
+                        "recommended_reorder": reorder_rec,
+                    })
+
+            # Sort at-risk SKUs by revenue loss descending
+            at_risk_skus.sort(key=lambda x: x["estimated_revenue_loss"], reverse=True)
+
+    # Compute overall simulated metrics
+    simulated_units = int(base_units * total_volume_multiplier)
+    simulated_revenue = round(base_revenue * price_multiplier * total_volume_multiplier, 2)
+    revenue_delta = round(simulated_revenue - base_revenue, 2)
+    revenue_delta_pct = round((revenue_delta / max(1.0, base_revenue)) * 100, 2)
+    units_delta = simulated_units - base_units
+    units_delta_pct = round((units_delta / max(1, base_units)) * 100, 2)
+
+    base_stock_to_demand = round(base_inventory / max(1.0, base_demand), 2)
+    sim_demand_total = base_demand * total_volume_multiplier
+    simulated_stock_to_demand = round(base_inventory / max(1.0, sim_demand_total), 2)
+
+    net_realized_revenue = max(0.0, round(simulated_revenue - total_shortfall_loss, 2))
+
+    # 5. Price Sensitivity Curve (-30% to +30%)
+    price_sensitivity_curve = []
+    for test_p in [-30, -20, -10, -5, 0, 5, 10, 20, 30]:
+        t_price_mult = 1.0 + (test_p / 100.0)
+        t_vol_factor = max(0.10, (1.0 + (-selected_elasticity * (-test_p / 100.0))) * demand_shock_factor * weather_factor * holiday_factor * competitor_factor)
+        t_rev = round(base_revenue * t_price_mult * t_vol_factor, 2)
+        price_sensitivity_curve.append({
+            "price_delta": f"{'+' if test_p > 0 else ''}{test_p}%",
+            "price_delta_num": test_p,
+            "projected_revenue": t_rev,
+            "volume_lift_pct": round((t_vol_factor - 1.0) * 100, 1),
+        })
+
+    # AI narrative synthesis
+    direction = "positive" if revenue_delta >= 0 else "contractionary"
+    summary_parts = [
+        f"Simulating a {price_change_pct:+.1f}% price adjustment with a {demand_shock_pct:+.1f}% demand shock yields a {direction} revenue shift of ${abs(revenue_delta):,.2f} ({revenue_delta_pct:+.1f}%).",
+        f"Units sold are projected at {simulated_units:,} (lift of {units_delta_pct:+.1f}%).",
+    ]
+    if stockout_count > 0:
+        summary_parts.append(f"Caution: {stockout_count} high-volume SKU cluster(s) face stockout deficit, representing an estimated ${total_shortfall_loss:,.2f} in unrealized sales if replenishment orders are not expedited.")
+    else:
+        summary_parts.append("Inventory buffers remain healthy with no acute stockout risks detected across top products.")
+
+    ai_executive_summary = " ".join(summary_parts)
+
+    copilot_prompt = (
+        f"We simulated a scenario in {category} for {region} region with a {price_change_pct:+.1f}% price shift, "
+        f"{demand_shock_pct:+.1f}% demand shock, and {target_weather} weather. Projected revenue shift is {revenue_delta_pct:+.1f}% (${revenue_delta:,.2f}), "
+        f"with {stockout_count} SKUs at stockout risk (${total_shortfall_loss:,.2f} loss). What specific replenishment and warehouse rebalancing actions should we take?"
+    )
+
+    return {
+        "baseline_revenue": round(base_revenue, 2),
+        "simulated_revenue": simulated_revenue,
+        "revenue_delta": revenue_delta,
+        "revenue_delta_pct": revenue_delta_pct,
+        "baseline_units": base_units,
+        "simulated_units": simulated_units,
+        "units_delta": units_delta,
+        "units_delta_pct": units_delta_pct,
+        "baseline_stock_to_demand": base_stock_to_demand,
+        "simulated_stock_to_demand": simulated_stock_to_demand,
+        "stockout_vulnerable_skus_count": stockout_count,
+        "estimated_stockout_loss": round(total_shortfall_loss, 2),
+        "net_realized_revenue": net_realized_revenue,
+        "elasticity_coefficient": selected_elasticity,
+        "category_comparison": category_comparison,
+        "regional_comparison": regional_comparison,
+        "price_sensitivity_curve": price_sensitivity_curve,
+        "at_risk_skus": at_risk_skus,
+        "ai_executive_summary": ai_executive_summary,
+        "suggested_copilot_prompt": copilot_prompt,
+    }
+

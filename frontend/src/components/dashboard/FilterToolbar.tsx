@@ -59,27 +59,34 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 border border-slate-200/90 shadow-sm space-y-3 transition-all">
+    <div className="glass-panel rounded-2xl p-5 border border-slate-800/80 shadow-glass space-y-4 transition-all">
       {/* Top Header Row with Active Count, LatticeLoader, and Presets */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-teal-50 text-teal-700 border border-teal-200">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5 border-b border-slate-800/80">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/30 shadow-inner">
             <Filter className="w-4 h-4" />
           </div>
-          <span className="text-sm font-semibold text-slate-800">
-            Interactive Filters & Segmentation
-          </span>
-          {activeCount > 0 && (
-            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-teal-600 text-white">
-              {activeCount} active
-            </span>
-          )}
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-white tracking-tight">
+                Interactive Multi-Dimensional Slicing
+              </span>
+              {activeCount > 0 && (
+                <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/40 animate-pulse">
+                  {activeCount} active
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Parameterized SQL segmentation across 73,100 records
+            </p>
+          </div>
 
           {/* React Bits LatticeLoader animation indicator */}
-          <div className="ml-2 pl-3 border-l border-slate-200 flex items-center">
+          <div className="ml-2 pl-3 border-l border-slate-800 flex items-center">
             <LatticeLoader
               status={isLoading ? 'working' : 'done'}
-              label="Segmenting"
+              label="Segmenting Data"
               doneLabel="Updated in"
               errorLabel="Failed in"
               pattern="orbit"
@@ -88,39 +95,38 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               cellSize={5}
               gap={2}
               fontSize={12}
-              color="#0d9488"
+              color="#2dd4bf"
               doneColor="#10b981"
               glow={isLoading}
-              glowColor="#14b8a6"
+              glowColor="#2dd4bf"
               showTimer={true}
             />
           </div>
         </div>
 
-
         {/* Quick Filter Presets */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-slate-400 mr-1 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-amber-500" /> Presets:
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-slate-400 mr-1 flex items-center gap-1 font-medium">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Presets:
           </span>
           <button
             type="button"
             onClick={() => applyPreset('all')}
-            className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all ${
               activeCount === 0
-                ? 'bg-slate-900 text-white border-slate-900'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                ? 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white border-transparent shadow-glow-teal'
+                : 'bg-slate-800/60 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:text-white'
             }`}
           >
-            All Records
+            All 73.1k
           </button>
           <button
             type="button"
             onClick={() => applyPreset('2023')}
-            className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all ${
               filters.start_date === '2023-01-01' && filters.end_date === '2023-12-31'
-                ? 'bg-teal-700 text-white border-teal-700'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                ? 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white border-transparent shadow-glow-teal'
+                : 'bg-slate-800/60 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:text-white'
             }`}
           >
             Year 2023
@@ -128,10 +134,10 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <button
             type="button"
             onClick={() => applyPreset('electronics')}
-            className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all ${
               filters.category === 'Electronics'
-                ? 'bg-teal-700 text-white border-teal-700'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                ? 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white border-transparent shadow-glow-teal'
+                : 'bg-slate-800/60 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:text-white'
             }`}
           >
             Electronics Focus
@@ -139,10 +145,10 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
           <button
             type="button"
             onClick={() => applyPreset('promo')}
-            className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all ${
               filters.holiday_promotion === 1
-                ? 'bg-teal-700 text-white border-teal-700'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                ? 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white border-transparent shadow-glow-teal'
+                : 'bg-slate-800/60 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:text-white'
             }`}
           >
             Holiday Promotions
@@ -153,28 +159,28 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               type="button"
               onClick={onReset}
               disabled={isLoading}
-              className="ml-2 flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors"
+              className="ml-2 flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl border border-rose-500/30 transition-all shadow-sm"
             >
-              <RotateCcw className="w-3 h-3" />
-              Reset
+              <RotateCcw className="w-3.5 h-3.5" />
+              Reset All
             </button>
           )}
         </div>
       </div>
 
       {/* Filter Dropdown Controls */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3.5">
         {/* Category Filter */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-            <ShoppingBag className="w-3 h-3 text-slate-400" />
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <ShoppingBag className="w-3.5 h-3.5 text-teal-400" />
             Category
           </label>
           <select
             value={filters.category || 'all'}
             onChange={(e) => handleSelect('category', e.target.value)}
             disabled={isLoading}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white transition-colors"
+            className="w-full text-xs bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-white font-medium focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition-colors cursor-pointer shadow-inner"
           >
             <option value="all">All Categories</option>
             {meta.categories.map((cat) => (
@@ -185,15 +191,15 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
 
         {/* Region Filter */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-            <MapPin className="w-3 h-3 text-slate-400" />
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-cyan-400" />
             Region
           </label>
           <select
             value={filters.region || 'all'}
             onChange={(e) => handleSelect('region', e.target.value)}
             disabled={isLoading}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white transition-colors"
+            className="w-full text-xs bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-white font-medium focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition-colors cursor-pointer shadow-inner"
           >
             <option value="all">All Regions</option>
             {meta.regions.map((reg) => (
@@ -204,15 +210,15 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
 
         {/* Weather Condition */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-            <CloudSun className="w-3 h-3 text-slate-400" />
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <CloudSun className="w-3.5 h-3.5 text-sky-400" />
             Weather
           </label>
           <select
             value={filters.weather || 'all'}
             onChange={(e) => handleSelect('weather', e.target.value)}
             disabled={isLoading}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white transition-colors"
+            className="w-full text-xs bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-white font-medium focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition-colors cursor-pointer shadow-inner"
           >
             <option value="all">All Weather</option>
             {meta.weather_conditions.map((wc) => (
@@ -223,15 +229,15 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
 
         {/* Seasonality */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-            <SunMedium className="w-3 h-3 text-slate-400" />
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <SunMedium className="w-3.5 h-3.5 text-amber-400" />
             Season
           </label>
           <select
             value={filters.seasonality || 'all'}
             onChange={(e) => handleSelect('seasonality', e.target.value)}
             disabled={isLoading}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white transition-colors"
+            className="w-full text-xs bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-white font-medium focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition-colors cursor-pointer shadow-inner"
           >
             <option value="all">All Seasons</option>
             {meta.seasonalities.map((season) => (
@@ -242,8 +248,8 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
 
         {/* Promotion Status */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-            <Tag className="w-3 h-3 text-slate-400" />
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-purple-400" />
             Promotion
           </label>
           <select
@@ -253,21 +259,21 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               handleSelect('holiday_promotion', val === 'all' ? undefined : Number(val));
             }}
             disabled={isLoading}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white transition-colors"
+            className="w-full text-xs bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-white font-medium focus:ring-2 focus:ring-teal-400 focus:border-teal-400 transition-colors cursor-pointer shadow-inner"
           >
             <option value="all">All Days</option>
-            <option value="1">Holiday Promotion Active</option>
+            <option value="1">Holiday Promo (Active)</option>
             <option value="0">Standard Non-Promo</option>
           </select>
         </div>
 
         {/* Date Range Start & End */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-            <Calendar className="w-3 h-3 text-slate-400" />
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
             Date Period
           </label>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <input
               type="date"
               value={filters.start_date || ''}
@@ -276,7 +282,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               onChange={(e) => handleSelect('start_date', e.target.value)}
               disabled={isLoading}
               title="Start Date"
-              className="w-1/2 text-[10px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:bg-white"
+              className="w-1/2 text-[10px] bg-slate-900/90 border border-slate-700/80 rounded-xl p-2 text-white focus:ring-2 focus:ring-teal-400 cursor-pointer shadow-inner"
             />
             <input
               type="date"
@@ -286,7 +292,7 @@ export const FilterToolbar: React.FC<FilterToolbarProps> = ({
               onChange={(e) => handleSelect('end_date', e.target.value)}
               disabled={isLoading}
               title="End Date"
-              className="w-1/2 text-[10px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-slate-800 focus:ring-2 focus:ring-teal-500 focus:bg-white"
+              className="w-1/2 text-[10px] bg-slate-900/90 border border-slate-700/80 rounded-xl p-2 text-white focus:ring-2 focus:ring-teal-400 cursor-pointer shadow-inner"
             />
           </div>
         </div>

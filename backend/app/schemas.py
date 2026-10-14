@@ -90,3 +90,49 @@ class PaginatedRecordsResponse(BaseModel):
     page_size: int
     total_pages: int
 
+class ScenarioSimulationRequest(BaseModel):
+    category: Optional[str] = "All"
+    region: Optional[str] = "All"
+    price_change_pct: float = Field(0.0, ge=-50.0, le=50.0, description="Price change percentage (-50% to +50%)")
+    demand_shock_pct: float = Field(0.0, ge=-50.0, le=100.0, description="Demand shock percentage (-50% to +100%)")
+    target_weather: Optional[str] = "Baseline"
+    competitor_discount_pct: float = Field(0.0, ge=-30.0, le=30.0)
+    is_holiday_mode: Optional[bool] = False
+
+class AtRiskSku(BaseModel):
+    product_id: str
+    category: str
+    region: str
+    current_inventory: int
+    base_demand: float
+    simulated_demand: float
+    shortfall_units: int
+    estimated_revenue_loss: float
+    recommended_reorder: int
+
+class ScenarioSimulationResponse(BaseModel):
+    baseline_revenue: float
+    simulated_revenue: float
+    revenue_delta: float
+    revenue_delta_pct: float
+    
+    baseline_units: int
+    simulated_units: int
+    units_delta: int
+    units_delta_pct: float
+    
+    baseline_stock_to_demand: float
+    simulated_stock_to_demand: float
+    
+    stockout_vulnerable_skus_count: int
+    estimated_stockout_loss: float
+    net_realized_revenue: float
+    
+    elasticity_coefficient: float
+    category_comparison: List[Dict[str, Any]]
+    regional_comparison: List[Dict[str, Any]]
+    price_sensitivity_curve: List[Dict[str, Any]]
+    at_risk_skus: List[AtRiskSku]
+    ai_executive_summary: str
+    suggested_copilot_prompt: str
+

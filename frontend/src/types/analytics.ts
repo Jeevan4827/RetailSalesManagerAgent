@@ -130,3 +130,65 @@ export interface PaginatedRecordsResponseData {
   page_size: number;
   total_pages: number;
 }
+
+export interface ScenarioSimulationRequestParams {
+  category?: string;
+  region?: string;
+  price_change_pct: number;
+  demand_shock_pct: number;
+  target_weather?: string;
+  competitor_discount_pct?: number;
+  is_holiday_mode?: boolean;
+}
+
+export interface AtRiskSkuItem {
+  product_id: string;
+  category: string;
+  region: string;
+  current_inventory: number;
+  base_demand: number;
+  simulated_demand: number;
+  shortfall_units: number;
+  estimated_revenue_loss: number;
+  recommended_reorder: number;
+}
+
+export interface PriceSensitivityPoint {
+  price_delta: string;
+  price_delta_num: number;
+  projected_revenue: number;
+  volume_lift_pct: number;
+}
+
+export interface ScenarioSimulationResult {
+  baseline_revenue: number;
+  simulated_revenue: number;
+  revenue_delta: number;
+  revenue_delta_pct: number;
+  baseline_units: number;
+  simulated_units: number;
+  units_delta: number;
+  units_delta_pct: number;
+  baseline_stock_to_demand: number;
+  simulated_stock_to_demand: number;
+  stockout_vulnerable_skus_count: number;
+  estimated_stockout_loss: number;
+  net_realized_revenue: number;
+  elasticity_coefficient: number;
+  category_comparison: Array<{
+    category: string;
+    baseline_revenue: number;
+    simulated_revenue: number;
+    delta_pct: number;
+  }>;
+  regional_comparison: Array<{
+    region: string;
+    baseline_revenue: number;
+    simulated_revenue: number;
+  }>;
+  price_sensitivity_curve: PriceSensitivityPoint[];
+  at_risk_skus: AtRiskSkuItem[];
+  ai_executive_summary: string;
+  suggested_copilot_prompt: string;
+}
+

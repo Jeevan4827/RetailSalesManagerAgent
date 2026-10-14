@@ -185,7 +185,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 text-slate-800 antialiased font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-obsidian-950 text-slate-100 antialiased font-sans bg-mesh-dark">
       {/* Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -215,15 +215,15 @@ export const App: React.FC = () => {
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Mobile Header Toggle Bar for Dashboard View */}
         {currentView === 'dashboard' && (
-          <div className="md:hidden flex items-center justify-between p-3 bg-white border-b border-slate-200">
+          <div className="md:hidden flex items-center justify-between p-3 bg-obsidian-900/90 border-b border-slate-800 backdrop-blur-md">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
-              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100"
+              className="p-1.5 rounded-lg text-slate-300 hover:bg-slate-800"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <span className="text-xs font-semibold text-slate-800">RetailIQ Intelligence</span>
+            <span className="text-xs font-bold text-white tracking-wide">RetailIQ Intelligence</span>
             <div className="w-5" />
           </div>
         )}

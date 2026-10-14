@@ -60,3 +60,26 @@ def test_analytics_records_search():
     assert len(data["records"]) > 0
     for r in data["records"]:
         assert "P0001" in r["product_id"] or "P0001" in r["store_id"]
+
+def test_scenario_simulation():
+    payload = {
+        "category": "Electronics",
+        "region": "West",
+        "price_change_pct": -10.0,
+        "demand_shock_pct": 20.0,
+        "target_weather": "Sunny",
+        "is_holiday_mode": True
+    }
+    response = client.post("/analytics/simulate", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "baseline_revenue" in data
+    assert "simulated_revenue" in data
+    assert "price_sensitivity_curve" in data
+    assert len(data["price_sensitivity_curve"]) == 9
+    assert "category_comparison" in data
+    assert "at_risk_skus" in data
+    assert "ai_executive_summary" in data
+    assert "suggested_copilot_prompt" in data
+    assert data["simulated_units"] > 0
+

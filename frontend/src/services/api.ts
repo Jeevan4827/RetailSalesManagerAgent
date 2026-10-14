@@ -181,3 +181,36 @@ export async function fetchAnalyticsRecords(options?: {
   return await res.json();
 }
 
+export async function runScenarioSimulation(params: {
+  category?: string;
+  region?: string;
+  price_change_pct: number;
+  demand_shock_pct: number;
+  target_weather?: string;
+  competitor_discount_pct?: number;
+  is_holiday_mode?: boolean;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/analytics/simulate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(params)
+  });
+
+  if (!res.ok) {
+    let errorDetail = 'Failed to execute scenario simulation';
+    try {
+      const err = await res.json();
+      if (err.detail) errorDetail = err.detail;
+    } catch {
+      errorDetail = `Simulation failed with status ${res.status}`;
+    }
+    throw new Error(errorDetail);
+  }
+
+  return await res.json();
+}
+
+
