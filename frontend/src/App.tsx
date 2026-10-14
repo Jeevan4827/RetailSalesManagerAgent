@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import type { ChatMessage, ChatSession } from './types/chat';
 import { Sidebar } from './components/Sidebar';
 import { ChatWindow } from './components/ChatWindow';
+import { DashboardPage } from './components/dashboard/DashboardPage';
 import { checkBackendHealth, sendChatMessage, saveSession, fetchSessions, fetchSessionDetail, deleteSession } from './services/api';
+import { Menu } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const [currentView, setCurrentView] = useState<'chat' | 'dashboard'>('dashboard');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
@@ -12,6 +15,7 @@ export const App: React.FC = () => {
   // Chat Sessions History State
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+
 
   // Database Connection Health State
   const [connected, setConnected] = useState<boolean>(false);
@@ -175,15 +179,28 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleAskAiFromDashboard = (questionText: string) => {
+    setCurrentView('chat');
+    handleSendMessage(questionText);
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 text-slate-800 antialiased font-sans">
       {/* Sidebar */}
       <Sidebar
+        currentView={currentView}
+        onSelectView={setCurrentView}
         onNewChat={handleNewChat}
-        onSelectExample={handleSendMessage}
+        onSelectExample={(q) => {
+          setCurrentView('chat');
+          handleSendMessage(q);
+        }}
         sessions={sessions}
         activeSessionId={activeSessionId}
-        onSelectSession={handleSelectSession}
+        onSelectSession={(id) => {
+          setCurrentView('chat');
+          handleSelectSession(id);
+        }}
         onDeleteSession={handleDeleteSession}
         connected={connected}
         checkingConnection={checkingConnection}
@@ -194,15 +211,40 @@ export const App: React.FC = () => {
         disabled={isLoading}
       />
 
-      {/* Main Chat Viewport */}
-      <ChatWindow
-        messages={messages}
-        isLoading={isLoading}
-        onSendMessage={handleSendMessage}
-        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-      />
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        {/* Mobile Header Toggle Bar for Dashboard View */}
+        {currentView === 'dashboard' && (
+          <div className="md:hidden flex items-center justify-between p-3 bg-white border-b border-slate-200">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <span className="text-xs font-semibold text-slate-800">RetailIQ Intelligence</span>
+            <div className="w-5" />
+          </div>
+        )}
+
+        {currentView === 'dashboard' ? (
+          <DashboardPage
+            onAskAi={handleAskAiFromDashboard}
+            onNavigateToChat={() => setCurrentView('chat')}
+          />
+        ) : (
+          <ChatWindow
+            messages={messages}
+            isLoading={isLoading}
+            onSendMessage={handleSendMessage}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          />
+        )}
+      </div>
     </div>
   );
 };
 
 export default App;
+

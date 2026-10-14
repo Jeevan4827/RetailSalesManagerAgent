@@ -124,3 +124,60 @@ export async function deleteSession(sessionId: string): Promise<void> {
     throw new Error(`Failed to delete session: status ${res.status}`);
   }
 }
+
+export async function fetchDashboardAnalytics(filters?: Record<string, any>): Promise<any> {
+  const params = new URLSearchParams();
+  if (filters) {
+    Object.entries(filters).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== '' && val !== 'all') {
+        params.append(key, String(val));
+      }
+    });
+  }
+  const queryString = params.toString() ? `?${params.toString()}` : '';
+  const res = await fetch(`${API_BASE_URL}/analytics/dashboard${queryString}`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to load analytics dashboard: status ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+export async function fetchAnalyticsRecords(options?: {
+  filters?: Record<string, any>;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}): Promise<any> {
+  const params = new URLSearchParams();
+  if (options?.filters) {
+    Object.entries(options.filters).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== '' && val !== 'all') {
+        params.append(key, String(val));
+      }
+    });
+  }
+  if (options?.sortBy) params.append('sort_by', options.sortBy);
+  if (options?.sortOrder) params.append('sort_order', options.sortOrder);
+  if (options?.page) params.append('page', String(options.page));
+  if (options?.pageSize) params.append('page_size', String(options.pageSize));
+  if (options?.search) params.append('search', options.search);
+
+  const res = await fetch(`${API_BASE_URL}/analytics/records?${params.toString()}`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to load inventory records: status ${res.status}`);
+  }
+
+  return await res.json();
+}
+

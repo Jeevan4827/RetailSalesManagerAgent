@@ -51,3 +51,42 @@ class SessionDetail(BaseModel):
     created_at: str
     updated_at: str
     messages: List[ChatMessageItem]
+
+class KpiMetrics(BaseModel):
+    total_records: int
+    total_units_sold: int
+    total_revenue: float
+    total_inventory: int
+    total_units_ordered: int
+    avg_discount: float
+    avg_price: float
+    total_demand_forecast: float
+    stock_to_demand_ratio: float
+    active_stores_count: int
+    active_products_count: int
+
+class FilterOptions(BaseModel):
+    categories: List[str]
+    regions: List[str]
+    weather_conditions: List[str]
+    seasonalities: List[str]
+    date_range: Dict[str, str]
+
+class DashboardAnalyticsResponse(BaseModel):
+    kpis: KpiMetrics
+    monthly_trends: List[Dict[str, Any]]
+    category_breakdown: List[Dict[str, Any]]
+    regional_breakdown: List[Dict[str, Any]]
+    weather_impact: List[Dict[str, Any]]
+    seasonality_impact: List[Dict[str, Any]]
+    promotional_impact: Dict[str, Any]
+    top_products: List[Dict[str, Any]]
+    filter_options: FilterOptions
+
+class PaginatedRecordsResponse(BaseModel):
+    records: List[Dict[str, Any]]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+

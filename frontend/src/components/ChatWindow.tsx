@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from 'react';
-import { Menu, Loader2, Sparkles } from 'lucide-react';
+import { Menu, Sparkles } from 'lucide-react';
 import type { ChatMessage as ChatMessageType } from '../types/chat';
 import { ChatMessage } from './ChatMessage';
 import { ExampleQuestions } from './ExampleQuestions';
 import { MessageComposer } from './MessageComposer';
+import { LatticeLoader } from './LatticeLoader';
 
 interface ChatWindowProps {
   messages: ChatMessageType[];
@@ -72,23 +73,33 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 />
               ))}
 
-              {/* Loading Indicator Bubble */}
+              {/* Loading Indicator Bubble with LatticeLoader */}
               {isLoading && (
-                <div className="flex w-full justify-start mb-5">
+                <div className="flex w-full justify-start mb-5 animate-in fade-in duration-200">
                   <div className="flex max-w-[80%] gap-3 items-start">
                     <div className="w-8 h-8 rounded-full bg-teal-700 flex items-center justify-center text-white shrink-0 shadow-sm">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Sparkles className="w-4 h-4 text-teal-200" />
                     </div>
-                    <div className="rounded-2xl rounded-tl-none bg-white border border-slate-200/90 px-4 py-3 shadow-sm flex items-center gap-2.5 text-xs text-slate-600">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-600"></span>
-                      </span>
-                      <span>Analyzing retail data & executing SQL query...</span>
+                    <div className="rounded-2xl rounded-tl-none bg-white border border-slate-200/90 px-4 py-3 shadow-sm flex items-center gap-3 text-xs text-slate-700">
+                      <LatticeLoader
+                        status="working"
+                        label="Synthesizing SQL & Grounding Answer"
+                        doneLabel="Synthesized in"
+                        pattern="orbit"
+                        grid={3}
+                        cellSize={5}
+                        gap={2}
+                        fontSize={12}
+                        color="#0d9488"
+                        glow={true}
+                        glowColor="#14b8a6"
+                        showTimer={true}
+                      />
                     </div>
                   </div>
                 </div>
               )}
+
 
               <div ref={messagesEndRef} />
             </div>

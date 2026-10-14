@@ -1,10 +1,11 @@
-import React from 'react';
-import { Store, Plus, Sparkles, HelpCircle, X, MessageSquare, Trash2, Clock } from 'lucide-react';
+import { Store, Plus, Sparkles, HelpCircle, X, MessageSquare, Trash2, Clock, LayoutDashboard, MessageCircle } from 'lucide-react';
 import { ConnectionStatus } from './ConnectionStatus';
 import { EXAMPLE_QUESTIONS } from './ExampleQuestions';
 import type { ChatSession } from '../types/chat';
 
 interface SidebarProps {
+  currentView: 'chat' | 'dashboard';
+  onSelectView: (view: 'chat' | 'dashboard') => void;
   onNewChat: () => void;
   onSelectExample: (question: string) => void;
   sessions: ChatSession[];
@@ -21,6 +22,8 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
+  currentView,
+  onSelectView,
   onNewChat,
   onSelectExample,
   sessions,
@@ -76,10 +79,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* New Chat Action */}
+        {/* View Mode Navigation Switcher */}
+        <div className="p-3 pb-0 space-y-1">
+          <button
+            type="button"
+            onClick={() => {
+              onSelectView('dashboard');
+              onClose();
+            }}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+              currentView === 'dashboard'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'text-slate-700 hover:bg-slate-100/90 hover:text-slate-900'
+            }`}
+          >
+            <LayoutDashboard className={`w-4 h-4 ${currentView === 'dashboard' ? 'text-white' : 'text-teal-700'}`} />
+            <span>Executive Dashboard</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              onSelectView('chat');
+              onClose();
+            }}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+              currentView === 'chat'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'text-slate-700 hover:bg-slate-100/90 hover:text-slate-900'
+            }`}
+          >
+            <MessageCircle className={`w-4 h-4 ${currentView === 'chat' ? 'text-white' : 'text-teal-700'}`} />
+            <span>AI Chat Assistant</span>
+          </button>
+        </div>
+
+        {/* New Chat Action (Shown in Chat mode or quick trigger) */}
         <div className="p-3">
           <button
             onClick={() => {
+              onSelectView('chat');
               onNewChat();
               onClose();
             }}
@@ -90,6 +129,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>New Chat</span>
           </button>
         </div>
+
 
         {/* Scrollable List: Saved Chats + Suggested Queries */}
         <div className="flex-1 overflow-y-auto px-3 py-2 space-y-4">

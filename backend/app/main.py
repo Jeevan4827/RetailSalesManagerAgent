@@ -1,11 +1,12 @@
 import logging
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
+from typing import List, Optional
 from app.config import settings
 from app.schemas import (
     ChatRequest, ChatResponse, HealthResponse, SchemaResponse, ColumnInfo,
-    SaveSessionRequest, SessionSummary, SessionDetail
+    SaveSessionRequest, SessionSummary, SessionDetail,
+    DashboardAnalyticsResponse, PaginatedRecordsResponse
 )
 from app.database import (
     check_db_health, execute_readonly_query, get_table_schema_info,
@@ -14,6 +15,8 @@ from app.database import (
 from app.services.sql_generator import generate_sql
 from app.services.sql_validator import validate_and_sanitize_sql, SQLValidationError
 from app.services.answer_generator import generate_answer
+from app.services.analytics_service import get_dashboard_analytics, get_analytics_records
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -220,3 +223,69 @@ def remove_session(session_id: str):
     except Exception as e:
         logger.error(f"Failed to delete session: {e}")
         raise HTTPException(status_code=500, detail=f"Database error deleting session: {str(e)}")
+
+@app.get("/analytics/dashboard", response_model=DashboardAnalyticsResponse, tags=["Analytics"])
+def get_analytics(
+    category: Optional[str] = Query(None, description="Category filter (Clothing, Electronics, Furniture, Groceries, Toys)"),
+    region: Optional[str] = Query(None, description="Region filter (East, North, South, West)"),
+    weather: Optional[str] = Query(None, description="Weather filter (Sunny, Rainy, Cloudy, Snowy)"),
+    seasonality: Optional[str] = Query(None, description="Seasonality filter (Autumn, Spring, Summer, Winter)"),
+    holiday_promotion: Optional[int] = Query(None, description="Promotion status: 1 or 0"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+):
+    """
+    Computes high-performance executive KPIs, time-series trends, and categorical breakdowns.
+    """
+    try:
+        data = get_dashboard_analytics(
+            category=category,
+            region=region,
+            weather=weather,
+            seasonality=seasonality,
+            holiday_promotion=holiday_promotion,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return data
+    except Exception as e:
+        logger.error(f"Failed to fetch dashboard analytics: {e}")
+        raise HTTPException(status_code=500, detail=f"Error computing analytics: {str(e)}")
+
+@app.get("/analytics/records", response_model=PaginatedRecordsResponse, tags=["Analytics"])
+def get_records(
+    category: Optional[str] = Query(None),
+    region: Optional[str] = Query(None),
+    weather: Optional[str] = Query(None),
+    seasonality: Optional[str] = Query(None),
+    holiday_promotion: Optional[int] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    sort_by: str = Query("date", description="Field to sort by (date, units_sold, revenue, inventory_level, demand_forecast, price, discount)"),
+    sort_order: str = Query("desc", description="asc or desc"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=5, le=100),
+    search: Optional[str] = Query(None, description="Search product_id or store_id"),
+):
+    """
+    Returns filtered, sorted, paginated records with total count and metadata.
+    """
+    try:
+        return get_analytics_records(
+            category=category,
+            region=region,
+            weather=weather,
+            seasonality=seasonality,
+            holiday_promotion=holiday_promotion,
+            start_date=start_date,
+            end_date=end_date,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page=page,
+            page_size=page_size,
+            search=search,
+        )
+    except Exception as e:
+        logger.error(f"Failed to fetch paginated records: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching records: {str(e)}")
+
